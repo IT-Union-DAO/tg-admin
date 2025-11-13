@@ -2,13 +2,14 @@
 .git
 .gitignore
 
-# Gradle
+# Gradle (exclude only cache, keep build files)
 .gradle/
-gradlew
-gradlew.bat
-build.gradle.kts
-settings.gradle.kts
-gradle/
+build/
+!gradlew
+!gradlew.bat
+!build.gradle.kts
+!settings.gradle.kts
+!gradle/
 
 # IDE
 .idea/

@@ -21,6 +21,8 @@ Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL cer
 - A domain name pointing to your server
 - Telegram Bot Token (get from [@BotFather](https://t.me/BotFather))
 
+**Note**: No local Java installation required! The build happens inside Docker containers.
+
 ### 1. Clone and Configure
 
 ```bash
@@ -84,6 +86,8 @@ Use the provided deployment script:
 ```
 
 This script will:
+- Check for Docker and Docker Compose availability
+- Build the application inside Docker containers (no local Java needed)
 - Set up Docker containers
 - Generate SSL certificates
 - Configure Nginx reverse proxy
@@ -232,6 +236,9 @@ docker compose up -d --build
 
 # Build JAR
 ./gradlew build
+
+# Build using Docker (no local Java required)
+docker compose build bot
 ```
 
 ### Project Structure

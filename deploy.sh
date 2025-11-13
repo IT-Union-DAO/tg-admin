@@ -24,6 +24,29 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check if required tools are available
+check_prerequisites() {
+    print_status "Checking prerequisites..."
+    
+    # Check if Docker is available
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not installed or not in PATH"
+        print_error "Please install Docker before running this script"
+        print_error "Visit: https://docs.docker.com/get-docker/"
+        exit 1
+    fi
+    
+    # Check if Docker Compose is available
+    if ! command -v docker compose &> /dev/null && ! command -v docker-compose &> /dev/null; then
+        print_error "Docker Compose is not installed or not in PATH"
+        print_error "Please install Docker Compose before running this script"
+        print_error "Visit: https://docs.docker.com/compose/install/"
+        exit 1
+    fi
+    
+    print_status "Prerequisites check passed"
+}
+
 # Check if required environment variables are set
 check_env_vars() {
     print_status "Checking environment variables..."
@@ -105,14 +128,10 @@ obtain_letsencrypt_certificate() {
     print_status "Let's Encrypt certificate obtained successfully"
 }
 
-# Build the application JAR
+# Build the application (now happens in Docker)
 build_application() {
-    print_status "Building application JAR..."
-    
-    # Run Gradle build to create the JAR file
-    ./gradlew build
-    
-    print_status "Application JAR built successfully"
+    print_status "Application will be built inside Docker container..."
+    print_status "This eliminates the need for local Java installation"
 }
 
 # Deploy the application
@@ -153,6 +172,7 @@ verify_deployment() {
 # Main deployment function
 main() {
     print_status "Starting Telegram bot deployment..."
+    print_status "Note: This script uses Docker-based builds, no local Java installation required"
     
     # Load environment variables from .env file if it exists
     if [ -f .env ]; then
@@ -160,6 +180,7 @@ main() {
         print_status "Loaded environment variables from .env file"
     fi
     
+    check_prerequisites
     check_env_vars
     create_directories
     build_application
