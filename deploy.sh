@@ -105,6 +105,16 @@ obtain_letsencrypt_certificate() {
     print_status "Let's Encrypt certificate obtained successfully"
 }
 
+# Build the application JAR
+build_application() {
+    print_status "Building application JAR..."
+    
+    # Run Gradle build to create the JAR file
+    ./gradlew build
+    
+    print_status "Application JAR built successfully"
+}
+
 # Deploy the application
 deploy_application() {
     print_status "Deploying Telegram bot application..."
@@ -152,6 +162,7 @@ main() {
     
     check_env_vars
     create_directories
+    build_application
     generate_ssl_certificate
     deploy_application
     obtain_letsencrypt_certificate
