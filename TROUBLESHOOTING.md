@@ -22,7 +22,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 1. **Check Docker installation**:
    ```bash
    docker --version
-   docker-compose --version
+   docker compose --version
    ```
 
 2. **Check port conflicts**:
@@ -41,8 +41,8 @@ This guide covers common issues and solutions for deploying and running the Tele
 4. **Clean up Docker resources**:
    ```bash
    docker system prune -f
-   docker-compose down -v
-   docker-compose up -d --build
+   docker compose down -v
+   docker compose up -d --build
    ```
 
 ### Out of Memory Errors
@@ -90,7 +90,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 3. **Check environment variable**:
    ```bash
    echo $TELEGRAM_BOT_TOKEN
-   docker-compose exec bot env | grep TELEGRAM_BOT_TOKEN
+   docker compose exec bot env | grep TELEGRAM_BOT_TOKEN
    ```
 
 ### Domain Name Issues
@@ -117,7 +117,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 3. **Check Nginx configuration**:
    ```bash
-   docker-compose exec nginx nginx -t
+   docker compose exec nginx nginx -t
    ```
 
 ## SSL Certificate Issues
@@ -146,7 +146,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 3. **Manual certificate generation**:
    ```bash
-   docker-compose run --rm certbot certonly \
+   docker compose run --rm certbot certonly \
      --webroot -w /var/www/certbot \
      -d your-domain.com \
      --email admin@your-domain.com \
@@ -155,7 +155,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 4. **Use staging environment for testing**:
    ```bash
-   docker-compose run --rm certbot certonly \
+   docker compose run --rm certbot certonly \
      --webroot -w /var/www/certbot \
      -d your-domain.com \
      --email admin@your-domain.com \
@@ -171,22 +171,22 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 1. **Check renewal process**:
    ```bash
-   docker-compose run --rm certbot renew --dry-run
+   docker compose run --rm certbot renew --dry-run
    ```
 
 2. **Force renewal**:
    ```bash
-   docker-compose run --rm certbot renew --force-renewal
+   docker compose run --rm certbot renew --force-renewal
    ```
 
 3. **Check Certbot logs**:
    ```bash
-   docker-compose logs certbot
+   docker compose logs certbot
    ```
 
 4. **Restart Nginx after renewal**:
    ```bash
-   docker-compose restart nginx
+   docker compose restart nginx
    ```
 
 ## Webhook Problems
@@ -222,8 +222,8 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 4. **Check Nginx proxy configuration**:
    ```bash
-   docker-compose exec nginx nginx -t
-   docker-compose logs nginx
+   docker compose exec nginx nginx -t
+   docker compose logs nginx
    ```
 
 ### Bot Permissions Issues
@@ -262,7 +262,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 1. **Monitor memory usage**:
    ```bash
    docker stats
-   docker-compose exec bot jstat -gc 1
+   docker compose exec bot jstat -gc 1
    ```
 
 2. **Adjust JVM settings**:
@@ -292,7 +292,7 @@ This guide covers common issues and solutions for deploying and running the Tele
 2. **Monitor API rate limits**:
    ```bash
    # Check for rate limiting in logs
-   docker-compose logs bot | grep -i "rate\|limit\|429"
+   docker compose logs bot | grep -i "rate\|limit\|429"
    ```
 
 3. **Optimize Docker resources**:
@@ -331,23 +331,23 @@ This guide covers common issues and solutions for deploying and running the Tele
 
 **Bot application logs**:
 ```bash
-docker-compose logs -f bot
-docker-compose logs --tail=100 bot
+docker compose logs -f bot
+docker compose logs --tail=100 bot
 ```
 
 **Nginx access logs**:
 ```bash
-docker-compose exec nginx tail -f /var/log/nginx/access.log
+docker compose exec nginx tail -f /var/log/nginx/access.log
 ```
 
 **Nginx error logs**:
 ```bash
-docker-compose exec nginx tail -f /var/log/nginx/error.log
+docker compose exec nginx tail -f /var/log/nginx/error.log
 ```
 
 **Certbot logs**:
 ```bash
-docker-compose logs certbot
+docker compose logs certbot
 ```
 
 ### Health Check Debugging
@@ -360,7 +360,7 @@ curl -v http://localhost:8080/health  # Direct to container
 
 **Check container health**:
 ```bash
-docker-compose ps
+docker compose ps
 docker inspect telegram-moderation-bot
 ```
 
@@ -372,7 +372,7 @@ If everything fails, perform a complete reset:
 
 ```bash
 # Stop all services
-docker-compose down -v
+docker compose down -v
 
 # Remove all containers and images
 docker system prune -a
@@ -406,8 +406,8 @@ If you're still having issues:
 
 1. **Collect diagnostic information**:
    ```bash
-   docker-compose logs > docker-logs.txt
-   docker-compose ps > docker-status.txt
+   docker compose logs > docker-logs.txt
+   docker compose ps > docker-status.txt
    docker version > docker-version.txt
    ```
 

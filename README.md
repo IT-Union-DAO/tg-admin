@@ -97,13 +97,13 @@ This script will:
 mkdir -p logs certbot/conf certbot/www
 
 # 2. Start services
-docker-compose up -d --build
+docker compose up -d --build
 
 # 3. Generate SSL certificate
-docker-compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-domain.com --email your-email@domain.com --agree-tos --no-eff-email
+docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-domain.com --email your-email@domain.com --agree-tos --no-eff-email
 
 # 4. Restart Nginx to apply SSL
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 ## Architecture
@@ -133,13 +133,13 @@ docker-compose restart nginx
 
 ```bash
 # Follow real-time logs
-docker-compose logs -f bot
+docker compose logs -f bot
 
 # View Nginx logs
-docker-compose logs -f nginx
+docker compose logs -f nginx
 
 # View all services
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Health Check
@@ -176,7 +176,7 @@ Response example:
 #### Bot Not Responding
 ```bash
 # Check bot logs
-docker-compose logs bot
+docker compose logs bot
 
 # Verify bot token
 curl -s "https://api.telegram.org/botYOUR_TOKEN/getMe"
@@ -185,10 +185,10 @@ curl -s "https://api.telegram.org/botYOUR_TOKEN/getMe"
 #### SSL Certificate Issues
 ```bash
 # Check certificate status
-docker-compose run --rm certbot certificates
+docker compose run --rm certbot certificates
 
 # Force renewal
-docker-compose run --rm certbot renew --force-renewal
+docker compose run --rm certbot renew --force-renewal
 ```
 
 #### Webhook Not Working
@@ -206,17 +206,17 @@ curl -X POST "https://api.telegram.org/botYOUR_TOKEN/setWebhook" \
 
 ```bash
 # Restart all services
-docker-compose restart
+docker compose restart
 
 # Restart specific service
-docker-compose restart bot
+docker compose restart bot
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Update and redeploy
 git pull
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Development

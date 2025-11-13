@@ -71,7 +71,7 @@ generate_ssl_certificate() {
     fi
     
     # Generate temporary certificate for initial setup
-    docker-compose run --rm --entrypoint "\
+    docker compose run --rm --entrypoint "\
         openssl req -x509 -nodes -newkey rsa:4096 -days 1 -keyout '/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem' -out '/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem' -subj '/CN=localhost'" certbot
     
     print_status "Temporary SSL certificate generated"
@@ -85,7 +85,7 @@ obtain_letsencrypt_certificate() {
     sleep 10
     
     # Request certificate from Let's Encrypt
-    docker-compose run --rm --entrypoint "\
+    docker compose run --rm --entrypoint "\
         certbot certonly --webroot -w /var/www/certbot \
         --email $CERTBOT_EMAIL \
         -d $DOMAIN_NAME \
@@ -102,7 +102,7 @@ deploy_application() {
     print_status "Deploying Telegram bot application..."
     
     # Build and start services
-    docker-compose up -d --build
+    docker compose up -d --build
     
     print_status "Application deployed successfully"
 }
@@ -119,7 +119,7 @@ verify_deployment() {
         print_status "Health check passed - bot is running"
     else
         print_error "Health check failed - please check the logs"
-        docker-compose logs bot
+        docker compose logs bot
         exit 1
     fi
     
@@ -157,10 +157,10 @@ main() {
     # Show useful commands
     echo ""
     print_status "Useful commands:"
-    echo "  View logs: docker-compose logs -f bot"
-    echo "  Stop services: docker-compose down"
-    echo "  Restart services: docker-compose restart"
-    echo "  Update SSL certificate: docker-compose run --rm certbot renew"
+    echo "  View logs: docker compose logs -f bot"
+    echo "  Stop services: docker compose down"
+    echo "  Restart services: docker compose restart"
+    echo "  Update SSL certificate: docker compose run --rm certbot renew"
 }
 
 # Run main function
