@@ -1,0 +1,23 @@
+ktor:
+    application:
+        modules:
+            - su.dunkan.ApplicationKt.module
+    deployment:
+        port: 8080
+
+# Telegram Bot Configuration
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN}
+  domain: ${DOMAIN_NAME}
+
+# Logging Configuration
+logging:
+  level:
+    su.dunkan: INFO
+    io.ktor: INFO
+  appenders:
+    - name: FILE
+      type: FileAppender
+      file: logs/application.log
+      pattern: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
