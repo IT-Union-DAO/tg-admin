@@ -56,6 +56,9 @@ create_directories() {
     mkdir -p logs
     mkdir -p certbot/conf
     mkdir -p certbot/www
+    mkdir -p certbot/conf/live
+    mkdir -p certbot/conf/archive
+    mkdir -p certbot/conf/renewal
     
     print_status "Directories created"
 }
@@ -69,6 +72,11 @@ generate_ssl_certificate() {
         print_warning "SSL certificate already exists for $DOMAIN_NAME"
         return
     fi
+    
+    # Create the necessary directory structure for certificates
+    mkdir -p certbot/conf/live/$DOMAIN_NAME
+    mkdir -p certbot/conf/archive/$DOMAIN_NAME
+    mkdir -p certbot/conf/renewal
     
     # Generate temporary certificate for initial setup
     docker compose run --rm --entrypoint "\
