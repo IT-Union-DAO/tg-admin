@@ -40,6 +40,12 @@ check_env_vars() {
         exit 1
     fi
     
+    if [ -z "$CERTBOT_EMAIL" ]; then
+        print_warning "CERTBOT_EMAIL environment variable is not set"
+        print_warning "Using default: admin@$DOMAIN_NAME"
+        export CERTBOT_EMAIL="admin@$DOMAIN_NAME"
+    fi
+    
     print_status "Environment variables check passed"
 }
 
@@ -81,7 +87,7 @@ obtain_letsencrypt_certificate() {
     # Request certificate from Let's Encrypt
     docker-compose run --rm --entrypoint "\
         certbot certonly --webroot -w /var/www/certbot \
-        --email admin@$DOMAIN_NAME \
+        --email $CERTBOT_EMAIL \
         -d $DOMAIN_NAME \
         --rsa-key-size 4096 \
         --agree-tos \

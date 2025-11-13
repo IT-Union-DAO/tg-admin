@@ -59,6 +59,10 @@ DOMAIN_NAME=your-domain.com
 
 # Optional: Custom port (default: 8080)
 BOT_PORT=8080
+
+# Email for SSL certificate registration and renewal
+# Used by Let's Encrypt for certificate expiration notices
+CERTBOT_EMAIL=admin@your-domain.com
 ```
 
 ### Getting a Bot Token
@@ -96,7 +100,7 @@ mkdir -p logs certbot/conf certbot/www
 docker-compose up -d --build
 
 # 3. Generate SSL certificate
-docker-compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-domain.com --email admin@your-domain.com --agree-tos --no-eff-email
+docker-compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-domain.com --email your-email@domain.com --agree-tos --no-eff-email
 
 # 4. Restart Nginx to apply SSL
 docker-compose restart nginx
