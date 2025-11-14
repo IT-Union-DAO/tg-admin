@@ -8,6 +8,10 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import com.github.kotlintelegrambot.entities.Update
+import com.github.kotlintelegrambot.entities.Message
+import com.github.kotlintelegrambot.entities.Chat
+import com.github.kotlintelegrambot.entities.User
 
 /**
  * Service class for interacting with Telegram Bot API
@@ -54,12 +58,14 @@ class TelegramBotService(
         return try {
             when {
                 update.message?.newChatMembers?.isNotEmpty() == true -> {
-                    logger.info("New member message detected in chat ${update.message.chat.id}")
-                    deleteMessage(update.message.chat.id, update.message.messageId)
+                    val message = update.message!!
+                    logger.info("New member message detected in chat ${message.chat.id}")
+                    deleteMessage(message.chat.id, message.messageId)
                 }
                 update.channelPost?.newChatMembers?.isNotEmpty() == true -> {
-                    logger.info("New member message detected in channel ${update.channelPost.chat.id}")
-                    deleteMessage(update.channelPost.chat.id, update.channelPost.messageId)
+                    val channelPost = update.channelPost!!
+                    logger.info("New member message detected in channel ${channelPost.chat.id}")
+                    deleteMessage(channelPost.chat.id, channelPost.messageId)
                 }
                 else -> {
                     logger.debug("Ignoring update type: ${update.updateId}")
@@ -75,11 +81,11 @@ class TelegramBotService(
     /**
      * Delete a message from chat
      */
-    private suspend fun deleteMessage(chatId: Long, messageId: Int): Boolean {
+    private suspend fun deleteMessage(chatId: Long, messageId: Long): Boolean {
         return try {
             val response: ApiResponse = httpClient.post("https://api.telegram.org/bot$botToken/deleteMessage") {
                 contentType(ContentType.Application.Json)
-                setBody(DeleteMessageRequest(chatId, messageId))
+                setBody(DeleteMessageRequest(chatId, messageId.toInt()))
             }.body()
             
             if (response.ok) {
@@ -114,61 +120,30 @@ class TelegramBotService(
     }
 }
 
-// Data classes for Telegram Bot API
+// Custom data classes removed - now using library types from com.github.kotlintelegrambot.entities
+// Temporary request/response classes for HTTP client compatibility
 
-@Serializable
-data class Update(
-    val updateId: Int,
-    val message: Message? = null,
-    val channelPost: Message? = null
-)
-
-@Serializable
-data class Message(
-    val messageId: Int,
-    val chat: Chat,
-    val newChatMembers: List<User>? = null
-)
-
-@Serializable
-data class Chat(
-    val id: Long,
-    val type: String
-)
-
-@Serializable
-data class User(
-    val id: Long,
-    val isBot: Boolean,
-    val firstName: String
-)
-
-@Serializable
 data class SetWebhookRequest(
     val url: String,
     val allowedUpdates: List<String> = listOf("message", "channel_post")
 )
 
-@Serializable
 data class DeleteMessageRequest(
     val chatId: Long,
     val messageId: Int
 )
 
-@Serializable
 data class ApiResponse(
     val ok: Boolean,
     val description: String? = null
 )
 
-@Serializable
 data class SetWebhookResponse(
     val ok: Boolean,
     val description: String? = null,
     val result: Boolean? = null
 )
 
-@Serializable
 data class GetMeResponse(
     val ok: Boolean,
     val result: BotInfo? = null,
@@ -176,7 +151,6 @@ data class GetMeResponse(
     val errorCode: Int? = null
 )
 
-@Serializable
 data class BotInfo(
     val id: Long,
     val isBot: Boolean,

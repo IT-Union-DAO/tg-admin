@@ -10,6 +10,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
+import com.github.kotlintelegrambot.entities.Update
 
 /**
  * Configure routing for the Telegram bot application
