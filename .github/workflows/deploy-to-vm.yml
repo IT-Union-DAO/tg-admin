@@ -1,0 +1,137 @@
+name: Deploy to Production VM
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (commit SHA or latest)'
+        required: false
+        default: 'latest'
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set version to deploy
+      id: version
+      run: |
+        if [ "${{ github.event.inputs.version }}" = "latest" ] || [ -z "${{ github.event.inputs.version }}" ]; then
+          # Get the latest commit SHA from main branch
+          VERSION=$(git rev-parse origin/main)
+        else
+          VERSION="${{ github.event.inputs.version }}"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Deploying version: $VERSION"
+
+    - name: Validate required secrets
+      run: |
+        if [ -z "${{ secrets.VM_SSH_KEY }}" ]; then
+          echo "Error: VM_SSH_KEY secret is not configured"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VM_HOST }}" ]; then
+          echo "Error: VM_HOST secret is not configured"
+          exit 1
+        fi
+        if [ -z "${{ secrets.VM_USER }}" ]; then
+          echo "Error: VM_USER secret is not configured"
+          exit 1
+        fi
+
+    - name: Setup SSH connection
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.VM_SSH_KEY }}
+
+    - name: Deploy to VM
+      run: |
+        # Set SSH connection variables
+        SSH_OPTS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        VM_HOST="${{ secrets.VM_HOST }}"
+        VM_USER="${{ secrets.VM_USER }}"
+        
+        echo "Connecting to VM: $VM_USER@$VM_HOST"
+        
+        # Create deployment directory if it doesn't exist
+        ssh $SSH_OPTS $VM_USER@$VM_HOST "mkdir -p ~/tg-admin-deployment"
+        
+        # Copy deployment files to VM
+        scp $SSH_OPTS -r . $VM_USER@$VM_HOST:~/tg-admin-deployment/
+        
+        # Execute deployment on VM
+        ssh $SSH_OPTS $VM_USER@$VM_HOST << 'EOF'
+          cd ~/tg-admin-deployment
+          
+          # Set environment variables
+          export JAR_VERSION="${{ steps.version.outputs.version }}"
+          export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          export TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
+          export DOMAIN_NAME="${{ secrets.DOMAIN_NAME }}"
+          export CERTBOT_EMAIL="${{ secrets.CERTBOT_EMAIL }}"
+          
+          echo "Starting deployment with version: $JAR_VERSION"
+          
+          # Make deploy script executable
+          chmod +x deploy.sh
+          
+          # Run deployment
+          ./deploy.sh
+          
+          # Check deployment status
+          if [ $? -eq 0 ]; then
+            echo "Deployment completed successfully"
+          else
+            echo "Deployment failed"
+            exit 1
+          fi
+        EOF
+
+    - name: Verify deployment
+      run: |
+        # Wait for application to start
+        sleep 30
+        
+        # Health check
+        VM_HOST="${{ secrets.VM_HOST }}"
+        DOMAIN_NAME="${{ secrets.DOMAIN_NAME }}"
+        
+        echo "Performing health check on https://$DOMAIN_NAME/health"
+        
+        if curl -f -s "https://$DOMAIN_NAME/health" > /dev/null; then
+          echo "✅ Health check passed - bot is running"
+        else
+          echo "❌ Health check failed - please check the logs"
+          echo "Run: ssh ${{ secrets.VM_USER }}@$VM_HOST 'cd ~/tg-admin-deployment && docker compose logs bot'"
+          exit 1
+        fi
+
+    - name: Deployment notification
+      if: always()
+      run: |
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "🚀 Deployment successful!"
+          echo "Bot is running at: https://${{ secrets.DOMAIN_NAME }}"
+          echo "Webhook URL: https://${{ secrets.DOMAIN_NAME }}/webhook"
+          echo "Health check: https://${{ secrets.DOMAIN_NAME }}/health"
+        else
+          echo "❌ Deployment failed!"
+          echo "Please check the logs and try again"
+        fi

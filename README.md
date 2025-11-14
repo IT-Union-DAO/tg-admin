@@ -2,7 +2,7 @@
 
 A lightweight Telegram bot for simple moderation procedures. The bot automatically tracks new members joining groups and deletes the "new member joined" service messages to keep group chats clean.
 
-Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL certificates via Certbot.
+Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL certificates via Certbot. Now supports **GitHub Actions-based CI/CD** for automated jar artifact building and deployment.
 
 ## Features
 
@@ -23,7 +23,30 @@ Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL cer
 
 **Note**: No local Java installation required! The build happens inside Docker containers.
 
-### 1. Clone and Configure
+### Option 1: GitHub Actions Deployment (Recommended)
+
+For production deployments with automated CI/CD:
+
+1. **Set up GitHub Secrets** (see [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md)):
+   - `VM_SSH_KEY`, `VM_HOST`, `VM_USER` for VM access
+   - `TELEGRAM_BOT_TOKEN`, `DOMAIN_NAME` for application
+   - `GITHUB_TOKEN` for package access (auto-provided)
+
+2. **Configure Repository**:
+   ```bash
+   git clone <repository-url>
+   cd tg-admin
+   git push origin main  # Triggers automated build
+   ```
+
+3. **Deploy Manually**:
+   - Go to `Actions` tab in GitHub
+   - Run `Deploy to Production VM` workflow
+   - Choose version and environment
+
+### Option 2: Local Deployment
+
+For development or manual deployment:
 
 ```bash
 git clone <repository-url>
@@ -32,11 +55,7 @@ cd tg-admin
 # Copy environment template and configure
 cp .env.example .env
 nano .env  # Edit with your bot token and domain
-```
 
-### 2. Deploy
-
-```bash
 # Make deployment script executable
 chmod +x deploy.sh
 
@@ -65,7 +84,14 @@ BOT_PORT=8080
 # Email for SSL certificate registration and renewal
 # Used by Let's Encrypt for certificate expiration notices
 CERTBOT_EMAIL=admin@your-domain.com
+
+# GitHub Packages Configuration (optional)
+GITHUB_TOKEN=your_github_token
+GITHUB_REPOSITORY=owner/repo
+JAR_VERSION=latest
 ```
+
+**For complete environment variable reference**, see [ENVIRONMENT_VARIABLES.md](logs/ENVIRONMENT_VARIABLES.md).
 
 ### Getting a Bot Token
 
@@ -77,7 +103,18 @@ CERTBOT_EMAIL=admin@your-domain.com
 
 ## Deployment Options
 
-### Option 1: Automated Deployment (Recommended)
+### Option 1: GitHub Actions Deployment (Production Recommended)
+
+Automated deployment with CI/CD pipeline:
+
+1. **Automated Build**: Jar artifacts built on main branch push
+2. **Manual Deployment**: Trigger deployment from GitHub Actions
+3. **Version Control**: Deploy specific versions or latest
+4. **Rollback Support**: Easy rollback to previous versions
+
+**Setup**: See [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md) for detailed configuration.
+
+### Option 2: Local Deployment (Development)
 
 Use the provided deployment script:
 
@@ -85,16 +122,23 @@ Use the provided deployment script:
 ./deploy.sh
 ```
 
-This script will:
-- Check for Docker and Docker Compose availability
-- Build the application inside Docker containers (no local Java needed)
-- Set up Docker containers
-- Generate SSL certificates
-- Configure Nginx reverse proxy
-- Start the bot service
-- Verify deployment
+This script supports:
+- **GitHub Packages**: Download pre-built artifacts (default)
+- **Local Build**: Build from source with `JAR_VERSION=local`
 
-### Option 2: Manual Deployment
+**Build Options**:
+```bash
+# Use GitHub Packages artifact
+./deploy.sh
+
+# Use specific version
+JAR_VERSION=abc123def456 ./deploy.sh
+
+# Use local build
+JAR_VERSION=local ./deploy.sh
+```
+
+### Option 3: Manual Deployment
 
 ```bash
 # 1. Create necessary directories
@@ -177,6 +221,13 @@ Response example:
 
 ### Common Issues
 
+#### GitHub Actions Deployment Problems
+- **Build Failures**: Check workflow logs, verify Java version and dependencies
+- **SSH Issues**: Validate VM access, check SSH key format in secrets
+- **Artifact Download**: Ensure GitHub token has `read:packages` permission
+
+**Detailed troubleshooting**: See [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md)
+
 #### Bot Not Responding
 ```bash
 # Check bot logs
@@ -205,6 +256,8 @@ curl -X POST "https://api.telegram.org/botYOUR_TOKEN/setWebhook" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://your-domain.com/webhook"}'
 ```
+
+**Comprehensive troubleshooting**: See [TROUBLESHOOTING.md](logs/TROUBLESHOOTING.md)
 
 ### Service Management
 
@@ -285,9 +338,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 If you encounter issues:
 
-1. Check the troubleshooting section above
-2. Review the application logs
-3. Open an issue on GitHub with details about your environment and the problem
+1. **Check documentation**:
+   - [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md) for CI/CD issues
+   - [ENVIRONMENT_VARIABLES.md](logs/ENVIRONMENT_VARIABLES.md) for configuration
+   - [TROUBLESHOOTING.md](logs/TROUBLESHOOTING.md) for comprehensive troubleshooting
+
+2. **Review the application logs**:
+   ```bash
+   docker compose logs bot
+   ```
+
+3. **Open an issue on GitHub** with:
+   - Environment details
+   - Error messages
+   - Steps to reproduce
+   - Diagnostic information
 
 ---
 

@@ -1,0 +1,33 @@
+# This is a test workflow to validate syntax
+# It can be used for local testing with act (https://github.com/nektos/act)
+
+name: Test Workflows Locally
+
+on:
+  push:
+    branches: [ test-workflows ]
+  workflow_dispatch:
+
+jobs:
+  test-syntax:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Validate workflow syntax
+      run: |
+        echo "Validating workflow files..."
+        find .github/workflows -name "*.yml" -exec echo "Checking {}" \; -exec yamllint {} \; || true
+        
+    - name: Test Gradle build locally
+      run: |
+        echo "Testing Gradle build process..."
+        chmod +x gradlew
+        ./gradlew build --dry-run || echo "Dry run completed"
+        
+    - name: Validate Gradle configuration
+      run: |
+        echo "Validating Gradle configuration..."
+        ./gradlew tasks --all
+        ./gradlew properties | grep -E "(version|group)"

@@ -3,10 +3,21 @@ plugins {
     alias(libs.plugins.ktor)
     kotlin("plugin.serialization") version "2.2.20"
     kotlin("kapt") version "2.2.20"
+    `maven-publish`
 }
 
 group = "su.dunkan"
 version = "0.0.1"
+
+// Use Git commit SHA for versioning in CI
+val gitCommitSha = providers.exec {
+    commandLine("git", "rev-parse", "HEAD")
+}.standardOutput.asText.get().trim()
+
+// Override version for CI builds
+if (System.getenv("GITHUB_ACTIONS") != null) {
+    version = gitCommitSha
+}
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
@@ -33,3 +44,61 @@ dependencies {
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.client.mock)
 }
+
+// Configure fat JAR creation
+tasks.named<Jar>("jar") {
+    archiveBaseName.set("tg-admin")
+    archiveClassifier.set("") // Remove "-all" suffix for consistency
+    
+    manifest {
+        attributes(
+            "Main-Class" to "io.ktor.server.netty.EngineMain",
+            "Implementation-Version" to project.version,
+            "Git-Commit" to (System.getenv("GITHUB_SHA") ?: "local")
+        )
+    }
+    
+    // Include all dependencies in the JAR
+    from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+// Publishing configuration for GitHub Packages
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.named("jar")) {
+                artifactId = "tg-admin"
+            }
+            
+            pom {
+                name.set("Telegram Admin Bot")
+                description.set("A Telegram bot for simple moderation procedures")
+                url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
+                
+                developers {
+                    developer {
+                        name.set("Telegram Admin Bot Team")
+                        email.set("admin@example.com")
+                    }
+                }
+                
+                scm {
+                    connection.set("scm:git:git://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
+                    developerConnection.set("scm:git:ssh://github.com:${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
+                    url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}/tree/main")
+                }
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}}

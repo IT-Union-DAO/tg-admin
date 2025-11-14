@@ -1,12 +1,24 @@
 services:
   # Telegram Bot Application
   bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAR_VERSION: ${JAR_VERSION:-latest}
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+        GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-dunkan/tg-admin}
+        MAVEN_REPO_URL: ${MAVEN_REPO_URL:-https://maven.pkg.github.com}
     container_name: telegram-moderation-bot
     restart: unless-stopped
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - DOMAIN_NAME=${DOMAIN_NAME}
+      # GitHub Packages configuration (for Docker build)
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY:-dunkan/tg-admin}
+      - JAR_VERSION=${JAR_VERSION:-latest}
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx256m -Xms128m}
     volumes:
       - ./logs:/app/logs
     networks:

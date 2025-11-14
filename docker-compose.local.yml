@@ -1,0 +1,12 @@
+# Local development override
+# Use: docker-compose -f docker-compose.yml -f docker-compose.local.yml up
+# To build locally instead of downloading from GitHub Packages
+
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    # Override any environment variables needed for local development
