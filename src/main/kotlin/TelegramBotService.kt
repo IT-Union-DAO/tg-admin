@@ -5,8 +5,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+// kotlinx.serialization removed - using Gson via telegram library
 import org.slf4j.LoggerFactory
 import com.github.kotlintelegrambot.entities.Update
 import com.github.kotlintelegrambot.entities.Message
@@ -23,7 +22,7 @@ class TelegramBotService(
     private val domain: String
 ) {
     private val logger = LoggerFactory.getLogger(TelegramBotService::class.java)
-    private val json = Json { ignoreUnknownKeys = true }
+    // Json configuration removed - using Gson via telegram library
     
     /**
      * Register webhook with Telegram Bot API
@@ -121,7 +120,7 @@ class TelegramBotService(
 }
 
 // Custom data classes removed - now using library types from com.github.kotlintelegrambot.entities
-// Temporary request/response classes for HTTP client compatibility
+// Temporary request/response classes for HTTP client compatibility (no @Serializable annotations)
 
 data class SetWebhookRequest(
     val url: String,

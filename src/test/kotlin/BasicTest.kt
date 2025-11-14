@@ -1,6 +1,7 @@
 package su.dunkan
 
 import kotlin.test.*
+import com.github.kotlintelegrambot.entities.User
 
 class BasicTest {
 

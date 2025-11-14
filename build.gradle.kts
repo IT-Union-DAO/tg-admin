@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
-    kotlin("plugin.serialization") version "2.2.20"
     kotlin("kapt") version "2.2.20"
     `maven-publish`
 }
@@ -43,7 +42,8 @@ dependencies {
     
     // JSON support
     implementation(libs.jackson.datatype.jsr310)
-    implementation(libs.kotlinx.serialization.json)
+    // Gson support (kotlin-telegram-bot library includes Gson)
+    // implementation("com.google.code.gson:gson:2.8.5") // Already included via telegram library
     
     // Telegram Bot library
     implementation(libs.kotlin.telegram.bot)
