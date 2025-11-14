@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
@@ -5,10 +16,6 @@ plugins {
     `maven-publish`
 }
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://jitpack.io") }
-}
 
 group = "su.dunkan"
 version = "0.0.1"
@@ -33,21 +40,18 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.jackson)
-    
+    implementation(libs.retrofit)
+
     // HTTP client for Telegram Bot API
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
-    
     // JSON support
-    implementation(libs.jackson.datatype.jsr310)
     // Gson support (kotlin-telegram-bot library includes Gson)
-    // implementation("com.google.code.gson:gson:2.8.5") // Already included via telegram library
-    
+    implementation(libs.gson)
     // Telegram Bot library
     implementation(libs.kotlin.telegram.bot)
-    
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.client.mock)
@@ -57,7 +61,7 @@ dependencies {
 tasks.named<Jar>("jar") {
     archiveBaseName.set("tg-admin")
     archiveClassifier.set("") // Remove "-all" suffix for consistency
-    
+
     manifest {
         attributes(
             "Main-Class" to "io.ktor.server.netty.EngineMain",
@@ -65,7 +69,7 @@ tasks.named<Jar>("jar") {
             "Git-Commit" to (System.getenv("GITHUB_SHA") ?: "local")
         )
     }
-    
+
     // Include all dependencies in the JAR
     from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -78,18 +82,18 @@ publishing {
             artifact(tasks.named("jar")) {
                 artifactId = "tg-admin"
             }
-            
+
             pom {
                 name.set("Telegram Admin Bot")
                 description.set("A Telegram bot for simple moderation procedures")
                 url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
-                
+
                 developers {
                     developer {
                         name.set("Andrei Dunai")
                     }
                 }
-                
+
                 scm {
                     connection.set("scm:git:git://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
                     developerConnection.set("scm:git:ssh://github.com:${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")

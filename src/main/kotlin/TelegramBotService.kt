@@ -1,71 +1,70 @@
 package su.dunkan
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-// kotlinx.serialization removed - using Gson via telegram library
-import org.slf4j.LoggerFactory
+import com.github.kotlintelegrambot.bot
+import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.Update
-import com.github.kotlintelegrambot.entities.Message
-import com.github.kotlintelegrambot.entities.Chat
 import com.github.kotlintelegrambot.entities.User
+import com.github.kotlintelegrambot.network.bimap
+import org.slf4j.LoggerFactory
 
 /**
  * Service class for interacting with Telegram Bot API
  * Handles webhook registration, message processing, and deletion
  */
 class TelegramBotService(
-    private val httpClient: HttpClient,
     private val botToken: String,
     private val domain: String
 ) {
     private val logger = LoggerFactory.getLogger(TelegramBotService::class.java)
-    // Json configuration removed - using Gson via telegram library
-    
+
+    private val libraryBot = bot {
+        token = botToken
+    }
+
     /**
      * Register webhook with Telegram Bot API
      */
     suspend fun registerWebhook(): Boolean {
-        return try {
-            val webhookUrl = "https://$domain/webhook"
-            logger.info("Registering webhook: $webhookUrl")
-            
-            val response: SetWebhookResponse = httpClient.post("https://api.telegram.org/bot$botToken/setWebhook") {
-                contentType(ContentType.Application.Json)
-                setBody(SetWebhookRequest(webhookUrl))
-            }.body()
-            
-            if (response.ok) {
-                logger.info("Webhook registered successfully")
-                true
-            } else {
-                logger.error("Failed to register webhook: ${response.description}")
-                false
-            }
-        } catch (e: Exception) {
-            logger.error("Error registering webhook", e)
-            false
-        }
+        val webhookUrl = "https://$domain/webhook"
+        return libraryBot.setWebhook(url = webhookUrl).bimap(mapError = { false }, mapResponse = { true })
     }
-    
+
     /**
      * Process incoming webhook update
      */
-    suspend fun processUpdate(update: Update): Boolean {
+    fun processUpdate(update: Update): Boolean {
         return try {
             when {
                 update.message?.newChatMembers?.isNotEmpty() == true -> {
                     val message = update.message!!
-                    logger.info("New member message detected in chat ${message.chat.id}")
+                    logger.info("New member message detected in chat ${message.chat.id} with ${message.newChatMembers?.size} members")
+                    // Log member details for debugging
+                    message.newChatMembers?.forEach { member ->
+                        logger.debug("New member: id=${member.id}, firstName='${member.firstName}', username='${member.username}'")
+                    }
+                    print(message)
                     deleteMessage(message.chat.id, message.messageId)
+                    return true
                 }
+
                 update.channelPost?.newChatMembers?.isNotEmpty() == true -> {
                     val channelPost = update.channelPost!!
-                    logger.info("New member message detected in channel ${channelPost.chat.id}")
+                    logger.info("New member message detected in channel ${channelPost.chat.id} with ${channelPost.newChatMembers?.size} members")
+                    // Log member details for debugging
+                    channelPost.newChatMembers?.forEach { member ->
+                        logger.debug("New channel member: id=${member.id}, firstName='${member.firstName}', username='${member.username}'")
+                    }
                     deleteMessage(channelPost.chat.id, channelPost.messageId)
+                    true
                 }
+
+
+                update.message?.leftChatMember != null -> {
+                    val message = update.message!!
+                    deleteMessage(message.chat.id, message.messageId)
+                    true
+                }
+
                 else -> {
                     logger.debug("Ignoring update type: ${update.updateId}")
                     true
@@ -76,83 +75,15 @@ class TelegramBotService(
             false
         }
     }
-    
+
     /**
      * Delete a message from chat
      */
-    private suspend fun deleteMessage(chatId: Long, messageId: Long): Boolean {
-        return try {
-            val response: ApiResponse = httpClient.post("https://api.telegram.org/bot$botToken/deleteMessage") {
-                contentType(ContentType.Application.Json)
-                setBody(DeleteMessageRequest(chatId, messageId.toInt()))
-            }.body()
-            
-            if (response.ok) {
-                logger.info("Successfully deleted message $messageId from chat $chatId")
-                true
-            } else {
-                logger.error("Failed to delete message: ${response.description}")
-                false
-            }
-        } catch (e: Exception) {
-            logger.error("Error deleting message $messageId from chat $chatId", e)
-            false
-        }
-    }
-    
+    private fun deleteMessage(chatId: Long, messageId: Long): Boolean =
+        libraryBot.deleteMessage(ChatId.fromId(chatId), messageId).get()
+
     /**
      * Get bot information to verify connectivity
      */
-    suspend fun getBotInfo(): BotInfo? {
-        return try {
-            val response: GetMeResponse = httpClient.get("https://api.telegram.org/bot$botToken/getMe").body()
-            if (response.ok) {
-                response.result
-            } else {
-                logger.error("Failed to get bot info: ${response.description}")
-                null
-            }
-        } catch (e: Exception) {
-            logger.error("Error getting bot info", e)
-            null
-        }
-    }
+    fun getBotInfo(): User? = libraryBot.getMe().get()
 }
-
-// Custom data classes removed - now using library types from com.github.kotlintelegrambot.entities
-// Temporary request/response classes for HTTP client compatibility (no @Serializable annotations)
-
-data class SetWebhookRequest(
-    val url: String,
-    val allowedUpdates: List<String> = listOf("message", "channel_post")
-)
-
-data class DeleteMessageRequest(
-    val chatId: Long,
-    val messageId: Int
-)
-
-data class ApiResponse(
-    val ok: Boolean,
-    val description: String? = null
-)
-
-data class SetWebhookResponse(
-    val ok: Boolean,
-    val description: String? = null,
-    val result: Boolean? = null
-)
-
-data class GetMeResponse(
-    val ok: Boolean,
-    val result: BotInfo? = null,
-    val description: String? = null,
-    val errorCode: Int? = null
-)
-
-data class BotInfo(
-    val id: Long,
-    val isBot: Boolean,
-    val firstName: String,
-    val username: String
-)

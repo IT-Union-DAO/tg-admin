@@ -1,16 +1,12 @@
 package su.dunkan
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import com.github.kotlintelegrambot.entities.Update
 import io.ktor.http.*
-import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
-import com.github.kotlintelegrambot.entities.Update
 
 /**
  * Configure routing for the Telegram bot application
@@ -18,28 +14,21 @@ import com.github.kotlintelegrambot.entities.Update
  */
 fun Application.configureRouting() {
     val logger = LoggerFactory.getLogger("Routing")
-    
-    // Initialize HTTP client for Telegram Bot API
-    val httpClient = HttpClient(CIO) {
-        install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-            jackson()
-        }
-    }
-    
+
     // Get configuration from environment
     val botToken = environment.config.property("telegram.bot.token").getString()
     val domain = environment.config.property("telegram.domain").getString()
-    
+
     // Initialize bot service
-    val botService = TelegramBotService(httpClient, botToken, domain)
-    
+    val botService = TelegramBotService(botToken, domain)
+
     routing {
         // Webhook endpoint for Telegram updates
         post("/webhook") {
             try {
                 val update = call.receive<Update>()
                 logger.info("Received update: ${update.updateId}")
-                
+
                 val success = botService.processUpdate(update)
                 if (success) {
                     call.respond(HttpStatusCode.OK)
@@ -51,7 +40,7 @@ fun Application.configureRouting() {
                 call.respond(HttpStatusCode.BadRequest)
             }
         }
-        
+
         // Health check endpoint
         get("/health") {
             try {
@@ -90,7 +79,7 @@ fun Application.configureRouting() {
                 )
             }
         }
-        
+
         // Basic info endpoint
         get("/") {
             call.respond(
