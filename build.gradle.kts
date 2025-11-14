@@ -6,6 +6,11 @@ plugins {
     `maven-publish`
 }
 
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+
 group = "su.dunkan"
 version = "0.0.1"
 
@@ -40,6 +45,9 @@ dependencies {
     implementation(libs.jackson.datatype.jsr310)
     implementation(libs.kotlinx.serialization.json)
     
+    // Telegram Bot library
+    implementation(libs.kotlin.telegram.bot)
+    
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.client.mock)
@@ -61,6 +69,7 @@ tasks.named<Jar>("jar") {
     // Include all dependencies in the JAR
     from(configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 // Publishing configuration for GitHub Packages
 publishing {
@@ -77,8 +86,7 @@ publishing {
                 
                 developers {
                     developer {
-                        name.set("Telegram Admin Bot Team")
-                        email.set("admin@example.com")
+                        name.set("Andrei Dunai")
                     }
                 }
                 
@@ -90,15 +98,4 @@ publishing {
             }
         }
     }
-    
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-}}
+}
