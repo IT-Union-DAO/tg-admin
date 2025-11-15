@@ -135,11 +135,9 @@ check_existing_certificates() {
     fi
 }
 
-# Setup nginx configuration with environment variables
 setup_nginx_config() {
-    print_status "Setting up nginx configuration..."
-    
-    # Check if envsubst is available
+    print_status "Setting up nginx configuration templates..."
+
     if ! command -v envsubst &> /dev/null; then
         print_warning "envsubst not found, installing gettext..."
         if command -v apt-get &> /dev/null; then
@@ -149,21 +147,39 @@ setup_nginx_config() {
         elif command -v yum &> /dev/null; then
             sudo yum install -y gettext
         else
-            print_error "Cannot install envsubst automatically. Please install gettext package manually."
+            print_error "Cannot install envsubst automatically. Install gettext manually."
             exit 1
         fi
     fi
-    
-    # Process nginx configuration
-    if [ -f "nginx/conf.d/default.conf.template" ]; then
-        envsubst '${DOMAIN_NAME}' < nginx/conf.d/default.conf.template > nginx/conf.d/default.conf
-        print_status "✅ Nginx configuration generated"
-    else
-        print_error "Nginx template not found: nginx/conf.d/default.conf.template"
-        print_error "Please ensure the template file exists"
-        exit 1
-    fi
+
+    mkdir -p nginx/conf.d
+
+    envsubst '${DOMAIN_NAME}' < nginx/conf.d/bootstrap.conf.template > nginx/conf.d/bootstrap.conf
+    envsubst '${DOMAIN_NAME}' < nginx/conf.d/ssl.conf.template > nginx/conf.d/ssl.conf
+
+    cp nginx/conf.d/bootstrap.conf nginx/conf.d/default.conf
+
+    print_status "Generated nginx bootstrap + ssl configs"
 }
+
+
+switch_nginx_to_ssl() {
+    print_status "Switching nginx to SSL configuration..."
+
+    local compose_files="docker-compose.yml"
+    if [ "$JAR_VERSION" = "local" ]; then
+        compose_files="$compose_files -f docker-compose.local.yml"
+    fi
+
+    cp nginx/conf.d/ssl.conf nginx/conf.d/default.conf
+
+    print_status "Reloading nginx..."
+    docker compose -f $compose_files exec nginx nginx -s reload
+
+    print_status "Nginx successfully switched to HTTPS mode"
+}
+
+
 
 # Generate initial SSL certificate
 generate_ssl_certificate() {
@@ -332,7 +348,12 @@ main() {
     else
         obtain_letsencrypt_certificate
     fi
-    
+
+    # After certbot successfully generated certificates — switch nginx to SSL mode
+    if [ -d "certbot/conf/live/$DOMAIN_NAME" ]; then
+        switch_nginx_to_ssl
+    fi
+
     verify_deployment
     
     print_status "Deployment completed successfully!"
