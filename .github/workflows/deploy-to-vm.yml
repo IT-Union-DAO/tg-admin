@@ -39,9 +39,16 @@ jobs:
             VERSION="$LATEST_TAG"
             echo "Using latest semantic version tag: $VERSION"
           else
-            # Fallback to latest commit SHA
-            VERSION=$(git rev-parse origin/main)
-            echo "No semantic version tags found, using latest commit SHA: $VERSION"
+            # Fallback to latest commit short SHA (matches Gradle build format)
+            VERSION=$(git rev-parse --short origin/main)
+            echo "No semantic version tags found, using latest commit short SHA: $VERSION"
+            
+            # Check if we need to prepend base version (matches Gradle CI format)
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+              # This is a commit SHA, prepend base version like Gradle does
+              VERSION="0.0.1-$VERSION"
+              echo "Using Gradle CI version format: $VERSION"
+            fi
           fi
         else
           VERSION="${{ github.event.inputs.version }}"
@@ -85,8 +92,15 @@ jobs:
         # Create deployment directory if it doesn't exist
         ssh $SSH_OPTS $VM_USER@$VM_HOST "mkdir -p ~/tg-admin-deployment"
         
-        # Copy deployment files to VM
-        scp $SSH_OPTS -r . $VM_USER@$VM_HOST:~/tg-admin-deployment/
+        # Create deployment package locally
+        ./scripts/create-deployment-package.sh
+        
+        # Copy only essential deployment files to VM
+        # This preserves certbot data and avoids permission issues
+        scp $SSH_OPTS -r deployment-package/* $VM_USER@$VM_HOST:~/tg-admin-deployment/
+        
+        # Clean up local deployment package
+        rm -rf deployment-package
         
         # Execute deployment on VM
         ssh $SSH_OPTS $VM_USER@$VM_HOST << 'EOF'

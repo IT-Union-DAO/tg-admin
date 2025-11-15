@@ -158,6 +158,39 @@ docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d your-d
 docker compose restart nginx
 ```
 
+## SSL Certificate Management
+
+### Automatic Certificate Creation
+
+The updated configuration now automatically creates SSL certificates on first run:
+
+```bash
+# Certificates will be created automatically when:
+docker compose up -d
+```
+
+### Manual Certificate Management
+
+```bash
+# Check certificate status
+docker exec certbot certbot certificates
+
+# Force certificate renewal
+docker exec certbot certbot renew --force-renewal
+
+# Test renewal (dry run)
+docker exec certbot certbot renew --dry-run
+
+# Initialize certificates manually (if automatic fails)
+./scripts/init-certbot.sh
+```
+
+### Troubleshooting SSL Issues
+
+1. **Certificates not created**: Check that `DOMAIN_NAME` and `CERTBOT_EMAIL` are set in `.env`
+2. **ACME challenge fails**: Ensure port 80 is accessible and domain DNS is configured
+3. **Permission errors**: Run `chmod 755 certbot/` and ensure proper ownership
+
 ## Architecture
 
 ```

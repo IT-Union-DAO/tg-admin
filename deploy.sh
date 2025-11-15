@@ -74,8 +74,8 @@ check_env_vars() {
     # GitHub Packages configuration
     if [ -z "$GITHUB_REPOSITORY" ]; then
         print_warning "GITHUB_REPOSITORY environment variable is not set"
-        print_warning "Using default: dunkan/tg-admin"
-        export GITHUB_REPOSITORY="dunkan/tg-admin"
+        print_warning "Using default: IT-Union-DAO/tg-admin"
+        export GITHUB_REPOSITORY="IT-Union-DAO/tg-admin"
     fi
     
     if [ -z "$JAR_VERSION" ]; then
@@ -119,8 +119,50 @@ create_directories() {
     mkdir -p certbot/conf/live
     mkdir -p certbot/conf/archive
     mkdir -p certbot/conf/renewal
+    mkdir -p nginx/conf.d
     
     print_status "Directories created"
+}
+
+# Check if SSL certificates already exist
+check_existing_certificates() {
+    if [ -d "certbot/conf/live/$DOMAIN_NAME" ]; then
+        print_status "✅ Existing SSL certificates found for $DOMAIN_NAME"
+        return 0
+    else
+        print_warning "No existing SSL certificates found for $DOMAIN_NAME"
+        return 1
+    fi
+}
+
+# Setup nginx configuration with environment variables
+setup_nginx_config() {
+    print_status "Setting up nginx configuration..."
+    
+    # Check if envsubst is available
+    if ! command -v envsubst &> /dev/null; then
+        print_warning "envsubst not found, installing gettext..."
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y gettext-base
+        elif command -v apk &> /dev/null; then
+            apk add --no-cache gettext
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y gettext
+        else
+            print_error "Cannot install envsubst automatically. Please install gettext package manually."
+            exit 1
+        fi
+    fi
+    
+    # Process nginx configuration
+    if [ -f "nginx/conf.d/default.conf.template" ]; then
+        envsubst '${DOMAIN_NAME}' < nginx/conf.d/default.conf.template > nginx/conf.d/default.conf
+        print_status "✅ Nginx configuration generated"
+    else
+        print_error "Nginx template not found: nginx/conf.d/default.conf.template"
+        print_error "Please ensure the template file exists"
+        exit 1
+    fi
 }
 
 # Generate initial SSL certificate
@@ -146,7 +188,7 @@ generate_ssl_certificate() {
     
     # Generate temporary certificate for initial setup
     print_status "Generating temporary SSL certificate for initial setup..."
-    docker compose $COMPOSE_FILES run --rm --entrypoint "\
+    docker compose -f $COMPOSE_FILES run --rm --entrypoint "\
         openssl req -x509 -nodes -newkey rsa:4096 -days 1 -keyout '/etc/letsencrypt/live/$DOMAIN_NAME/privkey.pem' -out '/etc/letsencrypt/live/$DOMAIN_NAME/fullchain.pem' -subj '/CN=localhost'" certbot
     
     print_status "Temporary SSL certificate generated"
@@ -162,13 +204,10 @@ obtain_letsencrypt_certificate() {
         COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.local.yml"
     fi
     
-    # Wait for nginx to start
-    sleep 10
-    
-    # Request certificate from Let's Encrypt
-    print_status "Requesting Let's Encrypt certificate..."
-    docker compose $COMPOSE_FILES run --rm --entrypoint "\
-        certbot certonly --webroot -w /var/www/certbot \
+    # Request certificate from Let's Encrypt using standalone mode
+    print_status "Requesting Let's Encrypt certificate (standalone mode)..."
+    docker compose -f $COMPOSE_FILES run --rm --entrypoint "\
+        certbot certonly --standalone \
         --email $CERTBOT_EMAIL \
         -d $DOMAIN_NAME \
         --rsa-key-size 4096 \
@@ -219,7 +258,7 @@ deploy_application() {
     
     # Build and start services
     print_status "Building and starting services..."
-    docker compose $COMPOSE_FILES up -d --build
+    docker compose -f $COMPOSE_FILES up -d --build
     
     print_status "Application deployed successfully"
 }
@@ -255,18 +294,45 @@ main() {
     print_status "Note: This script supports both GitHub Packages and local builds"
     
     # Load environment variables from .env file if it exists
-    if [ -f .env ]; then
-        export $(cat .env | grep -v '^#' | xargs)
-        print_status "Loaded environment variables from .env file"
-    fi
+    # Temporarily disabled due to parsing issues with complex values
+    # if [ -f .env ]; then
+    #     print_status "Loading environment variables from .env file..."
+    #     # Use a safer approach to load .env file without overriding existing env vars
+    #     # Skip complex variables like SSH keys that can cause parsing issues
+    #     while IFS='=' read -r key value; do
+    #         # Skip comments, empty lines, and complex multi-line values
+    #         [[ $key =~ ^#.*$ ]] || [[ -z $key ]] || [[ $key =~ VM_SSH_KEY ]] && continue
+    #         # Only set the variable if it's not already set from command line
+    #         if [ -z "${!key}" ]; then
+    #             export "$key=$value"
+    #         fi
+    #     done < .env
+    #     print_status "Loaded basic environment variables from .env file"
+    #     print_status "Note: Complex variables like SSH keys are skipped for safety"
+    # fi
     
     check_prerequisites
     check_env_vars
     create_directories
+    setup_nginx_config
     build_application
-    generate_ssl_certificate
+    
+    # Only generate certificates if they don't exist
+    if check_existing_certificates; then
+        print_status "Using existing SSL certificates"
+    else
+        generate_ssl_certificate
+    fi
+    
     deploy_application
-    obtain_letsencrypt_certificate
+    
+    # Only obtain Let's Encrypt certificate if no valid certificates exist
+    if check_existing_certificates; then
+        print_status "Skipping Let's Encrypt certificate request (certificates already exist)"
+    else
+        obtain_letsencrypt_certificate
+    fi
+    
     verify_deployment
     
     print_status "Deployment completed successfully!"
