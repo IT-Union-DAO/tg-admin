@@ -16,7 +16,8 @@ server {
 
 # HTTPS server - proxy to Telegram bot
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    http2 on;
     server_name ${DOMAIN_NAME};
 
     # SSL configuration

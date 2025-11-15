@@ -45,6 +45,7 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./certbot/conf:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
+    command: ["nginx", "-g", "daemon off;"]
     networks:
       - bot-network
     depends_on:
@@ -55,10 +56,13 @@ services:
     image: certbot/certbot
     container_name: certbot
     restart: unless-stopped
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    entrypoint: "/bin/sh -c 'if [ ! -f /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem ]; then certbot certonly --webroot --webroot-path /var/www/certbot --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email -d ${DOMAIN_NAME}; fi; trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - bot-network
 

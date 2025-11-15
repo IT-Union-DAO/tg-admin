@@ -90,7 +90,8 @@ tasks.register("generateVersionProperties") {
     doLast {
         val versionFile = file("src/main/resources/version.properties")
         versionFile.parentFile.mkdirs()
-        versionFile.writeText("""
+        versionFile.writeText(
+            """
             # Application Version Information
             # Generated at build time
             
@@ -103,7 +104,8 @@ tasks.register("generateVersionProperties") {
             git.branch=$gitBranch
             git.tag=${if (gitTag.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) gitTag else "none"}
             build.environment=${if (isCI) "ci" else "local"}
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 }
 
@@ -148,27 +150,21 @@ publishing {
             pom {
                 name.set("Telegram Admin Bot")
                 description.set("A Telegram bot for simple moderation procedures")
-                url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
-
-                developers {
-                    developer {
-                        name.set("Andrei Dunai")
-                    }
-                }
+                url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "IT-Union-DAO/tg-admin"}")
 
                 scm {
-                    connection.set("scm:git:git://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
-                    developerConnection.set("scm:git:ssh://github.com:${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
-                    url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}/tree/main")
+                    connection.set("scm:git:git://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "IT-Union-DAO/tg-admin"}.git")
+                    developerConnection.set("scm:git:ssh://github.com:${System.getenv("GITHUB_REPOSITORY") ?: "IT-Union-DAO/tg-admin"}.git")
+                    url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "IT-Union-DAO/tg-admin"}/tree/main")
                 }
             }
         }
     }
-    
+
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
+            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "IT-Union-DAO/tg-admin"}")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
