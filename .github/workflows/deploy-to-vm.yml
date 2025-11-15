@@ -33,11 +33,23 @@ jobs:
       id: version
       run: |
         if [ "${{ github.event.inputs.version }}" = "latest" ] || [ -z "${{ github.event.inputs.version }}" ]; then
-          # Get the latest commit SHA from main branch
-          VERSION=$(git rev-parse origin/main)
+          # Get the latest semantic version tag or fallback to commit SHA
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -n "$LATEST_TAG" ]; then
+            VERSION="$LATEST_TAG"
+            echo "Using latest semantic version tag: $VERSION"
+          else
+            # Fallback to latest commit SHA
+            VERSION=$(git rev-parse origin/main)
+            echo "No semantic version tags found, using latest commit SHA: $VERSION"
+          fi
         else
           VERSION="${{ github.event.inputs.version }}"
+          echo "Using specified version: $VERSION"
         fi
+        
+        # Remove 'v' prefix if present for Maven compatibility
+        VERSION="${VERSION#v}"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Deploying version: $VERSION"
 

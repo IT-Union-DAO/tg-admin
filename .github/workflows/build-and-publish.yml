@@ -48,8 +48,18 @@ jobs:
     - name: Generate version info
       id: version
       run: |
-        # Use Git commit SHA for versioning
-        VERSION="${{ github.sha }}"
+        # Check if this is a tagged commit
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          # Use semantic version from tag (remove 'refs/tags/' prefix)
+          VERSION="${GITHUB_REF#refs/tags/}"
+          # Remove 'v' prefix if present
+          VERSION="${VERSION#v}"
+          echo "Using semantic version from tag: $VERSION"
+        else
+          # Use commit SHA for non-tagged builds
+          VERSION="${{ github.sha }}"
+          echo "Using commit SHA version: $VERSION"
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Generated version: $VERSION"
 

@@ -1,8 +1,10 @@
 # Telegram Moderation Bot
 
-A lightweight Telegram bot for simple moderation procedures. The bot automatically tracks new members joining groups and deletes the "new member joined" service messages to keep group chats clean.
+A lightweight Telegram bot for simple moderation procedures. The bot automatically tracks new members joining groups and
+deletes the "new member joined" service messages to keep group chats clean.
 
-Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL certificates via Certbot. Now supports **GitHub Actions-based CI/CD** for automated jar artifact building and deployment.
+Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL certificates via Certbot. Now supports *
+*GitHub Actions-based CI/CD** for automated jar artifact building and deployment.
 
 ## Features
 
@@ -28,9 +30,9 @@ Built with Kotlin and Ktor, deployed using Docker Compose with automated SSL cer
 For production deployments with automated CI/CD:
 
 1. **Set up GitHub Secrets** (see [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md)):
-   - `VM_SSH_KEY`, `VM_HOST`, `VM_USER` for VM access
-   - `TELEGRAM_BOT_TOKEN`, `DOMAIN_NAME` for application
-   - `GITHUB_TOKEN` for package access (auto-provided)
+    - `VM_SSH_KEY`, `VM_HOST`, `VM_USER` for VM access
+    - `TELEGRAM_BOT_TOKEN`, `DOMAIN_NAME` for application
+    - `GITHUB_TOKEN` for package access (auto-provided)
 
 2. **Configure Repository**:
    ```bash
@@ -40,9 +42,9 @@ For production deployments with automated CI/CD:
    ```
 
 3. **Deploy Manually**:
-   - Go to `Actions` tab in GitHub
-   - Run `Deploy to Production VM` workflow
-   - Choose version and environment
+    - Go to `Actions` tab in GitHub
+    - Run `Deploy to Production VM` workflow
+    - Choose version and environment
 
 ### Option 2: Local Deployment
 
@@ -123,10 +125,12 @@ Use the provided deployment script:
 ```
 
 This script supports:
+
 - **GitHub Packages**: Download pre-built artifacts (default)
 - **Local Build**: Build from source with `JAR_VERSION=local`
 
 **Build Options**:
+
 ```bash
 # Use GitHub Packages artifact
 ./deploy.sh
@@ -199,6 +203,7 @@ curl https://your-domain.com/health
 ```
 
 Response example:
+
 ```json
 {
   "status": "healthy",
@@ -222,6 +227,7 @@ Response example:
 ### Common Issues
 
 #### GitHub Actions Deployment Problems
+
 - **Build Failures**: Check workflow logs, verify Java version and dependencies
 - **SSH Issues**: Validate VM access, check SSH key format in secrets
 - **Artifact Download**: Ensure GitHub token has `read:packages` permission
@@ -229,6 +235,7 @@ Response example:
 **Detailed troubleshooting**: See [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md)
 
 #### Bot Not Responding
+
 ```bash
 # Check bot logs
 docker compose logs bot
@@ -238,6 +245,7 @@ curl -s "https://api.telegram.org/botYOUR_TOKEN/getMe"
 ```
 
 #### SSL Certificate Issues
+
 ```bash
 # Check certificate status
 docker compose run --rm certbot certificates
@@ -247,6 +255,7 @@ docker compose run --rm certbot renew --force-renewal
 ```
 
 #### Webhook Not Working
+
 ```bash
 # Check webhook status
 curl -s "https://api.telegram.org/botYOUR_TOKEN/getWebhookInfo"
@@ -339,9 +348,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 If you encounter issues:
 
 1. **Check documentation**:
-   - [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md) for CI/CD issues
-   - [ENVIRONMENT_VARIABLES.md](logs/ENVIRONMENT_VARIABLES.md) for configuration
-   - [TROUBLESHOOTING.md](logs/TROUBLESHOOTING.md) for comprehensive troubleshooting
+    - [GITHUB_ACTIONS_SETUP.md](logs/GITHUB_ACTIONS_SETUP.md) for CI/CD issues
+    - [ENVIRONMENT_VARIABLES.md](logs/ENVIRONMENT_VARIABLES.md) for configuration
+    - [TROUBLESHOOTING.md](logs/TROUBLESHOOTING.md) for comprehensive troubleshooting
+    - [ACT_USAGE.md](logs/ACT_USAGE.md) for local pipeline testing
 
 2. **Review the application logs**:
    ```bash
@@ -349,11 +359,12 @@ If you encounter issues:
    ```
 
 3. **Open an issue on GitHub** with:
-   - Environment details
-   - Error messages
-   - Steps to reproduce
-   - Diagnostic information
+    - Environment details
+    - Error messages
+    - Steps to reproduce
+    - Diagnostic information
 
 ---
 
-**Note**: This bot is designed for simple moderation tasks. For complex moderation needs, consider using more advanced bot frameworks or custom solutions.
+**Note**: This bot is designed for simple moderation tasks. For complex moderation needs, consider using more advanced
+bot frameworks or custom solutions.

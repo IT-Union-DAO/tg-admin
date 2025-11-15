@@ -86,6 +86,30 @@ This guide helps diagnose and resolve common issues with the Telegram Admin Bot 
    ./deploy.sh
    ```
 
+#### Issue: Local GitHub Actions Testing with act Fails
+**Symptoms**:
+- `act` command fails with permission errors
+- Error messages about `certbot/conf/accounts` directory
+- File copying fails during workflow execution
+
+**Solutions**:
+1. **Use --bind flag** to mount directories instead of copying:
+   ```bash
+   # Test individual workflows
+   act --bind -W .github/workflows/build-and-publish.yml
+   act --bind -W .github/workflows/deploy-to-vm.yml --dryrun
+   act --bind -W .github/workflows/test-workflows.yml --dryrun
+   
+   # Test all workflows
+   act --bind
+   ```
+2. **Root Cause**: The `certbot/conf/accounts` directory has restrictive permissions (`drwx------`) owned by root
+3. **Alternative**: If you need to test without --bind, temporarily fix permissions:
+   ```bash
+   sudo chmod 755 certbot/conf/accounts
+   ```
+4. **Note**: The --bind flag is the recommended solution as it doesn't require permission changes
+
 ## Docker and Container Issues
 
 ### Container Startup Failures

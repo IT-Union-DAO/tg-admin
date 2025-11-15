@@ -90,5 +90,34 @@ fun Application.configureRouting() {
                 )
             )
         }
+
+        // Version information endpoint
+        get("/version") {
+            try {
+                val versionProps = javaClass.classLoader.getResourceAsStream("version.properties")
+                if (versionProps != null) {
+                    val props = java.util.Properties()
+                    props.load(versionProps)
+                    call.respond(props.toMap())
+                } else {
+                    call.respond(
+                        mapOf(
+                            "app.name" to "Telegram Admin Bot",
+                            "app.version" to "unknown",
+                            "error" to "Version information not available"
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error("Error reading version information", e)
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf(
+                        "error" to "Failed to read version information",
+                        "message" to e.message
+                    )
+                )
+            }
+        }
     }
 }

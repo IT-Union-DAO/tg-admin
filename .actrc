@@ -1,0 +1,14 @@
+# act configuration file
+# GitHub Actions runner for local testing
+
+# Use medium-sized runner for better performance
+-P ubuntu-latest=node:20-bullseye
+
+# Bind secrets from .env file
+--secret-file .env
+
+# Enable verbose output for debugging
+-v
+
+# Platform configuration for Docker
+--container-architecture linux/amd64

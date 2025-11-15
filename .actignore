@@ -1,0 +1,10 @@
+# Directories to ignore when copying to act container
+certbot/
+logs/
+build/
+.gradle/
+.git/
+.idea/
+*.log
+*.tmp
+*.temp

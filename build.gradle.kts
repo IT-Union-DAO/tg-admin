@@ -1,3 +1,5 @@
+import java.time.Instant
+
 buildscript {
     repositories {
         mavenCentral()
@@ -18,16 +20,42 @@ plugins {
 
 
 group = "su.dunkan"
-version = "0.0.1"
 
-// Use Git commit SHA for versioning in CI
-val gitCommitSha = providers.exec {
-    commandLine("git", "rev-parse", "HEAD")
-}.standardOutput.asText.get().trim()
+// Version management configuration
+val isCI = System.getenv("GITHUB_ACTIONS") != null
 
-// Override version for CI builds
-if (System.getenv("GITHUB_ACTIONS") != null) {
-    version = gitCommitSha
+// Safe Git information extraction
+fun safeGitCommand(vararg args: String): String = try {
+    providers.exec { commandLine(*args) }.standardOutput.asText.get().trim()
+} catch (e: Exception) {
+    "unknown"
+}
+
+val gitCommitSha = safeGitCommand("git", "rev-parse", "HEAD")
+val gitCommitShortSha = safeGitCommand("git", "rev-parse", "--short", "HEAD")
+val gitTag = safeGitCommand("git", "describe", "--tags", "--exact-match", "--always")
+val gitBranch = safeGitCommand("git", "rev-parse", "--abbrev-ref", "HEAD")
+
+// Semantic version configuration
+val baseVersion = "0.0.1"
+
+// Determine final version
+version = if (isCI) {
+    // In CI environment
+    if (gitTag.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) {
+        // Use semantic version from Git tag (remove 'v' prefix if present)
+        gitTag.removePrefix("v")
+    } else {
+        // Use commit SHA for non-tagged builds
+        "$baseVersion-$gitCommitShortSha"
+    }
+} else {
+    // Local development
+    if (gitTag.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) {
+        gitTag.removePrefix("v")
+    } else {
+        "$baseVersion-SNAPSHOT"
+    }
 }
 
 application {
@@ -57,6 +85,33 @@ dependencies {
     testImplementation(libs.ktor.client.mock)
 }
 
+// Task to generate version information file
+tasks.register("generateVersionProperties") {
+    doLast {
+        val versionFile = file("src/main/resources/version.properties")
+        versionFile.parentFile.mkdirs()
+        versionFile.writeText("""
+            # Application Version Information
+            # Generated at build time
+            
+            app.name=Telegram Admin Bot
+            app.group=${project.group}
+            app.version=${project.version}
+            build.timestamp=${Instant.now()}
+            git.commit=$gitCommitSha
+            git.commit.short=$gitCommitShortSha
+            git.branch=$gitBranch
+            git.tag=${if (gitTag.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) gitTag else "none"}
+            build.environment=${if (isCI) "ci" else "local"}
+        """.trimIndent())
+    }
+}
+
+// Make build tasks depend on version generation
+tasks.named("processResources") {
+    dependsOn("generateVersionProperties")
+}
+
 // Configure fat JAR creation
 tasks.named<Jar>("jar") {
     archiveBaseName.set("tg-admin")
@@ -66,7 +121,14 @@ tasks.named<Jar>("jar") {
         attributes(
             "Main-Class" to "io.ktor.server.netty.EngineMain",
             "Implementation-Version" to project.version,
-            "Git-Commit" to (System.getenv("GITHUB_SHA") ?: "local")
+            "Implementation-Title" to "Telegram Admin Bot",
+            "Implementation-Vendor" to "su.dunkan",
+            "Built-By" to System.getProperty("user.name", "unknown"),
+            "Build-Timestamp" to Instant.now().toString(),
+            "Git-Commit" to gitCommitSha,
+            "Git-Commit-Short" to gitCommitShortSha,
+            "Git-Branch" to gitBranch,
+            "Git-Tag" to (if (gitTag.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) gitTag else "none")
         )
     }
 
@@ -99,6 +161,17 @@ publishing {
                     developerConnection.set("scm:git:ssh://github.com:${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}.git")
                     url.set("https://github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}/tree/main")
                 }
+            }
+        }
+    }
+    
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${System.getenv("GITHUB_REPOSITORY") ?: "dunkan/tg-admin"}")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
             }
         }
     }
