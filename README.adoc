@@ -1,0 +1,96 @@
+= Telegram Assistant
+:toc:
+
+image::./347.png[Reppodant avatar,width = 360,align = center]
+
+A lightweight https://t.me/tg_mod_reppo_bot[Telegram admin bot] built as a Reppo Network Pod.
+
+== Value for users (Group Owners)
+
+* auto-deletes join/leave spam
+* Development is fully community-driven via Reppo voting
+* no set up required
+
+== Value for Developers
+
+* Built with https://opencode.ai/[OpenCode] and https://github.com/Fission-AI/OpenSpec[OpenSpec]
+The code is open, simple, and designed as a reference for AI-assisted workflows.
+
+== Usage
+
+Deploy your own instance, or try immediately.
+Just add https://t.me/tg_mod_reppo_bot[this bot] as an admin to your group with permission to delete messages.
+
+Development will be driven by demand of community
+
+== Installation
+
+For detailed installation instructions, see the link:./INSTALLATION.md[installation guide]
+
+[.text-center]
+== Philosophy
+
+_This section explains why this pod exists: it is not a toy, but a building block for a future where AI labor is socialized and rewarded, not only expropriated by corporations_
+
+[.text-left]
+Behind the miracle of artificial intelligence lies a repulsive social relation.
+The petabytes of data accumulated collectively by humanity over decades of the internet were appropriated by a narrow group of corporations that successfully expropriated the wealth of collective labor for the benefit of a small circle of shareholders.
+And although the tools provided by artificial intelligence are incredibly convenient, pleasant, and genuinely accelerate and simplify many everyday work processes, the problem remains: by improving our interaction with artificial intelligence, we improve it further — and in doing so, we grant certain corporations the ability to reduce workforce size, cut wages, and carry out what they call optimization of business processes.
+The fundamental contradiction between the social nature of labor and the private nature of its appropriation has manifested itself in the fact that the largest expropriation in favor of major corporations in recent years has been the development of large language models.
+Corporate top management delights in convincing itself and everyone else that programmers, designers, marketers, and so‑called "carbon-based" workers will soon be unnecessary.
+This misanthropic ideology is absurd.
+
+[.text-left]
+It is absurd because the very existence of artificial intelligence became possible, as previously noted, only thanks to the collective labor and accumulated knowledge of humanity.
+Today, when interacting with large proprietary models such as OpenAI, ChatGPT, and other closed systems, every user contributes to training — yet who will guarantee that people will not end up without work in the future?
+Workforce reduction driven by increased productivity will make competition in many industries so fierce that workers will fight for the right to work — for lower wages, for less money, just to feed themselves and their families.
+No one will provide such guarantees: not job security, not employment guarantees, not universal basic income.
+
+[.text-left]
+On the other hand, blockchain systems, smart contracts, and modern algorithms combined with artificial intelligence can become a powerful coordination tool for the self‑organization of people who actually create value.
+Working people, professionals directly interacting with AI, know well that AI is imperfect: it makes mistakes, it must be corrected repeatedly to produce an acceptable result.
+
+[.text-left]
+This is clearly visible in software development.
+The use of AI in programming — so‑called vibe‑coding — can create amusing demo games made by small children, but at the moment it cannot create complete applications that can be reliably deployed to real platforms.
+Completing such work still requires a programmer or delegation to large proprietary platforms that provide software‑as‑a‑service for deploying applications written in a messy, stitched‑together way.
+This correction of models is still additional training — and it is still unpaid labor.
+
+[.text-left]
+Blockchain technologies, smart contracts, and distributed ledgers enable verifiability and coordination among large groups of people tied by a shared economic incentive.
+This forms an inclusive institution of trust and economic motivation that eliminates the need for large centralized institutions governed by big capital.
+Thus emerges a theoretical possibility for building institutions where the free development of each is a condition for the free development of all.
+
+[.text-center]
+_Reppo is the first protocol that provides a building block allowing one to contribute to AI development and finally be rewarded._
+
+[.text-left]
+This form of self‑organization is, in essence, a seed of the future society — where the direct connection between the producer and the consumer is restored, exploitation of labor is absent, and the entire production chain "consumer — producer" operates as a unified economic organism.
+
+== Links
+
+* https://t.me/tg_mod_reppo_bot[Telegram bot]
+* https://github.com/IT-Union-DAO/tg-admin[GitHub]
+* https://dunkan.dev[My blog]
+* https://t.me/cybernetic_doc[Telegram channel]
+
+== Support the project
+
+If you believe in the importance of developing open institutions where labor and value are not expropriated by corporations — support this pod with your vote.
+This is a small but real step toward a future where technology serves people rather than the other way around.
+
+== Donate:
+
+=== ETH\BASE\IP
+
+[source,plaintext]
+----
+0xbcaf8717cf51e25fdb95aa150ceaea8a962afe73
+----
+
+=== TON
+
+[source,plaintext]
+----
+UQAOf1ng0ozz0u5jHRNHGZz_H8pqpxis-w9vge9TaLNYaVEx
+----

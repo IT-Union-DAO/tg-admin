@@ -1,5 +1,7 @@
 # Telegram Moderation Bot
 
+
+
 A lightweight Telegram bot for simple moderation procedures. The bot automatically tracks new members joining groups and
 deletes the "new member joined" service messages to keep group chats clean.
 
