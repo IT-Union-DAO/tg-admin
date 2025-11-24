@@ -1,7 +1,7 @@
 = Telegram Assistant
 :toc:
 
-image::./347.png[Reppodant avatar,width = 360,align = center]
+image::./avatar.png[Reppodant avatar,width = 360,align = center]
 
 A lightweight https://t.me/tg_mod_reppo_bot[Telegram admin bot] built as a Reppo Network Pod.
 
